@@ -8,8 +8,11 @@ import {
   updateStatusContact,
 } from "../controllers/contactsControllers.js";
 import isValidId from "../middlewares/isValidId.js";
+import authtenticate from "../middlewares/authenticate.js";
 
 const contactsRouter = express.Router();
+
+contactsRouter.use(authtenticate);
 
 contactsRouter.get("/", getAllContacts);
 
