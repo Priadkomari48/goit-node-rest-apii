@@ -1,12 +1,19 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import Jimp from "jimp";
+import fs from "fs/promises";
+import path from "path";
 
 import * as authServices from "../services/authServices.js";
 import * as userServices from "../services/userServices.js";
 
 import HttpError from "../helpers/HttpError.js";
+import gravatar from "gravatar";
+import "dotenv/config";
 
 const { JWT_SECRET } = process.env;
+
+const avatarsDir = path.resolve("public", "avatars");
 
 const signup = async (req, res, next) => {
   try {
@@ -16,7 +23,8 @@ const signup = async (req, res, next) => {
       throw HttpError(409, "Email already in use");
     }
 
-    const newUser = await authServices.signup(req.body);
+    const avatarURL = gravatar.url(email);
+    const newUser = await authServices.signup({ ...req.body, avatarURL });
 
     res.status(201).json({
       email: newUser.email,
@@ -80,10 +88,30 @@ const signout = async (req, res, next) => {
     next(error);
   }
 };
+const changeAvatar = async (req, res, next) => {
+  try {
+    const { _id } = req.user;
+    const { path: oldPath, filename } = req.file;
+
+    Jimp.read(oldPath, (err, lenna) => {
+      if (err) throw err;
+      lenna.resize(250, 250).write(`${avatarsDir}\\${filename}`);
+      fs.rm(oldPath);
+    });
+    const avatarURL = path.join("avatars", filename);
+
+    await authServices.setAvatar(_id, avatarURL);
+    return res.json({ avatarURL });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export default {
   signup,
   signin,
   getCurrent,
   signout,
+
+  changeAvatar,
 };
