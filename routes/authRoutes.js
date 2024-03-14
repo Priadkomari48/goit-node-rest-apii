@@ -15,6 +15,10 @@ authRouter.get("/current", authtenticate, authController.getCurrent);
 
 authRouter.post("/signout", authtenticate, authController.signout);
 
+authRouter.get("/verify/:verificationToken", authController.verify);
+
+authRouter.post("/verify", authController.resendVerifyEmail);
+
 authRouter.patch(
   "/users/avatars",
   upload.single("photo"),
